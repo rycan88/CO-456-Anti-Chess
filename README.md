@@ -5,18 +5,23 @@ This bot uses the Python Chess library which can be found at https://python-ches
 Python Chess installation details are on the site.
 
 Type the command
-
-'pip install chess'
+```
+pip install chess
+```
 
 to install the library.
 
 
 To run the program, in the command line type:
 
-'python3 antiChessBot.py white'
+```
+python3 antiChessBot.py white
+```
 
 or 
 
-'python3 antiChessBot.py black'
+```
+python3 antiChessBot.py black
+```
 
 where the bot will play on the side of the colour in the command line
