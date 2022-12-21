@@ -1,7 +1,7 @@
 # CO-456-Anti-Chess
 CO 456 Anti-Chess Final Project
 
-This bot uses the Python Chess library which can be found at https://python-chess.readthedocs.io/en/latest/
+This bot uses the Python Chess library which can be found at https://python-chess.readthedocs.io/en/latest/ .
 Python Chess installation details are on the site.
 
 Type the command
