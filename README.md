@@ -18,13 +18,13 @@ to install the libraries.
 To run the program, in the command line type:
 
 ```
-python3 antiChessBot.py white
+python3 main.py white
 ```
 
 or 
 
 ```
-python3 antiChessBot.py black
+python3 main.py black
 ```
 
 where the bot will play on the side of the colour in the command line
