@@ -1,44 +1,8 @@
-import chess
-import random
-import math
-import chess.gaviota
-import time
-import sys
-
-class AntiChess(chess.Board):
-    Bitboard = int
-    BB_ALL = 0xffff_ffff_ffff_ffff
-    def generate_legal_moves(self, from_mask: Bitboard = BB_ALL, to_mask: Bitboard = BB_ALL):
-        hasCapture = False
-        for move in super().generate_legal_moves():
-            if self.is_capture(move):
-                hasCapture = True
-                yield move
-        if not hasCapture:
-            yield from super().generate_legal_moves()
-
-    def is_legal(self, move):
-        return (move in tuple(self.legal_moves))
+import chess, chess.gaviota
+import random, math, time
+import chess.svg
 
 #--------------------------------------------------------------------------------------------HUMAN------------------------------------------------------------------------------------
-class Human():
-    def __init__(self):
-        self.time_used = 0
-        self.opponent = None
-    def getMove(self, board: chess.Board):
-        while True:
-            #print("Possible Moves are ", tuple(board.generate_legal_moves()))
-            try:
-                inp = input()                
-                #inp = input("Enter your move: ")
-                move = chess.Move.from_uci(inp)
-                if board.is_legal(move):
-                    return move
-                #print("INVALID MOVE")
-            except:
-                #print("INVALID MOVE")
-                pass
-
 
 class AntiChessBot():
     def __init__(self, color):
@@ -275,7 +239,7 @@ class BotLevel_3(AntiChessBot):
                 bestMove = move
 
             alpha = max(alpha, highestScore)
-        #print(highestScore, bestMove)
+        print(highestScore, bestMove)
         return bestMove
 
     def evaluateNode(self, board: chess.Board, depth: int, calculationDepth: int, alpha: float, beta: float) -> float:
@@ -394,73 +358,6 @@ class BotLevel_3(AntiChessBot):
         return ally_piece_value - enemy_piece_value
 
 
-class Game():
-    def __init__(self, player1, player2):
-        self.player1 = player1
-        self.player2 = player2
-        self.board = AntiChess()
-    def MakeMove(self, board: chess.Board, player):
-        move = player.getMove(board.copy())
-        if type(player) != Human:
-            print(move)
-        if not board.is_legal(move):
-            #print("ILLEGAL MOVE")
-            return False
-
-        board.push(move)
-
-        #print("WHITE" if board.turn else "BLACK")
-        #print(player.time_used)
-        #print(board, end = '\n\n')    
-        
-        return True
-
-    def PlayGame(self):
-        #print(self.board.turn)
-        #print(self.board, end = '\n\n')   
-        self.player1.opponent = self.player2
-        self.player2.opponent = self.player1         
-        while self.board.outcome() == None and (not self.board.can_claim_draw()):
-            t = time.time()
-            self.player1.turn_start_time = t
-            valid_move = self.MakeMove(self.board, self.player1)
-            self.player1.time_used += time.time() - t
-            if not valid_move:
-                break
-             
-            if self.board.outcome() != None:
-                break
-            
-            t = time.time()
-            self.player2.turn_start_time = t
-            valid_move = self.MakeMove(self.board, self.player2)
-            self.player2.time_used += time.time() - t
-            if not valid_move:
-                break 
-
-        #print(self.board.outcome(), self.board.can_claim_draw())
-        #print(self.board.fullmove_number)
-
-        #print("Player 1 used: ", self.player1.time_used)
-        #print("Player 2 used: ", self.player2.time_used)
-
-        startingBoard = AntiChess()
-        #print(startingBoard.variation_san(self.board.move_stack))
-
-if len(sys.argv) == 2:
-    if sys.argv[1] == "white":
-        player1 = BotLevel_3(chess.WHITE)
-        player2 = Human()
-    elif sys.argv[1] == "black":
-        player1 = Human()
-        player2 = BotLevel_3(chess.BLACK)
-else:
-    player1 = BotLevel_1(chess.WHITE)
-    player2 = BotLevel_3(chess.BLACK) 
-#player1 = Human()
-#player2 = Human()
 
 
-game = Game(player1, player2)
-game.PlayGame()
 
