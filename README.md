@@ -4,12 +4,15 @@ CO 456 Anti-Chess Final Project
 This bot uses the Python Chess library which can be found at https://python-chess.readthedocs.io/en/latest/ .
 Python Chess installation details are on the site.
 
-Type the command
+For our UI we are using the pygame library which can be found at https://www.pygame.org/news .
+
+Type the commands
 ```
 pip install chess
+pip install pygame
 ```
 
-to install the library.
+to install the libraries.
 
 
 To run the program, in the command line type:
