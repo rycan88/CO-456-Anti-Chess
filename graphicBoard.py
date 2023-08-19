@@ -3,7 +3,6 @@ import sys
 import pygame
 from pygame import Color
 from human import Human
-from game import Game
 from antiChessBot import *
 from antiChess import AntiChess
 from multiprocessing import Process
@@ -21,14 +20,52 @@ class GraphicBoard():
         player2.opponent = self.player1
    
         self.board = AntiChess()
+
+        # Creates checkered pattern
+        self.uiBoard = pygame.Surface((self.tileSize * 8, self.tileSize * 8))
+        green = Color(119,153,84)
+        beige = Color(233,237,204)
+        for y in range(8):
+            for x in range(8): 
+                if (x + y) % 2 == 0:
+                    tileColor = beige
+                else:
+                    tileColor = green
+                pygame.draw.rect(self.uiBoard, tileColor, rect=(x * self.tileSize, y * self.tileSize, self.tileSize, self.tileSize))
+
+        I = {"p": "b_P", "n": "b_N", "b": "b_B", "r": "b_R", "q": "b_Q", "k": "b_K",
+            "P": "w_P", "N": "w_N", "B": "w_B", "R": "w_R", "Q": "w_Q", "K": "w_K"}
+        # Stores piece images so we dont need to reload them.
+        self.Images = {} 
+        for key in I.keys():
+            im = pygame.image.load("pieceImages/" + I[key] + ".png")
+            im = pygame.transform.scale(im, (self.tileSize, self.tileSize))
+            self.Images[key] = im
+
+        # Flipped is false if white is at the bottom, true if black is at the bottom 
+        self.flipped = False
+        if type(player2) == Human and type(player1) != Human:
+            self.flipped = True
+
         self.clicked = None    
+    
     def checkEvents(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
     def positionToTile(self, tup):
-        return (tup[1] // self.tileSize) * 8 + (tup[0] // self.tileSize)
+        if self.flipped:
+            return (tup[1] // self.tileSize) * 8 + (7 - (tup[0] // self.tileSize))
+        return (7 - (tup[1] // self.tileSize)) * 8 + (tup[0] // self.tileSize)
+        
+    
+    def tileToPosition(self, num):
+        if self.flipped:
+            return ((7 - (num % 8)) * self.tileSize, (num // 8) * self.tileSize)
+        return ((num % 8) * self.tileSize, (7 - (num // 8)) * self.tileSize)
+        
+
     def run(self):
         clock = pygame.time.Clock()
         self.update()
@@ -53,6 +90,7 @@ class GraphicBoard():
                             if event.pos[0] >= 8 * self.tileSize or event.pos[1] >= 8 * self.tileSize:
                                 continue
                             tileNum = self.positionToTile(event.pos)
+                            print(tileNum)
                             if first == None:
                                 if self.board.color_at(tileNum) == self.board.turn:
                                     first = tileNum
@@ -119,49 +157,79 @@ class GraphicBoard():
         pygame.quit()
 
     def makeMove(self, move):
+        self.showAnimation(move)
         self.board.push(move)
         self.update()
 
-    
-    def update(self):
-        Images = {"p": "b_P", "n": "b_N", "b": "b_B", "r": "b_R", "q": "b_Q", "k": "b_K",
-                  "P": "w_P", "N": "w_N", "B": "w_B", "R": "w_R", "Q": "w_Q", "K": "w_K"}
+    def showAnimation(self, move):
         green = Color(119,153,84)
         beige = Color(233,237,204)
+        steps = 20
+        x_cur, y_cur = self.tileToPosition(move.from_square)
+        x_dest, y_dest = self.tileToPosition(move.to_square)
+        x_vel, y_vel = (x_dest - x_cur) / steps, (y_dest - y_cur) / steps
+        for i in range(steps - 1):
+            x_cur += x_vel
+            y_cur += y_vel
+            self.update(False)
+            coord = self.tileToPosition(move.from_square)
+            
+            if sum(coord) % 2 == 0:
+                tileColor = beige
+            else:
+                tileColor = green
+            self.drawTile(coord, tileColor, 255)
+
+            piece = self.board.piece_at(move.from_square)
+            self.drawPiece(piece, (x_cur, y_cur))
+
+            pygame.display.flip()
+
+    def drawPiece(self, piece, coord):
+        im = self.Images[piece.symbol()]
+        self.screen.blit(im, coord)
+
+    def drawTile(self, coord, color, alpha):
+        surface = pygame.Surface((self.tileSize, self.tileSize))
+        surface.set_alpha(alpha)
+        surface.fill(color)
+        self.screen.blit(surface, coord)
+
+    def update(self, redraw = True):
         prevMove = None 
         if len(self.board.move_stack) > 0:
             prevMove = self.board.peek()
         # fill the screen with a color to wipe away anything from last frame
         self.screen.fill(Color(38,37,34))
+        self.screen.blit(self.uiBoard, (0, 0))
+        # Highlights the previous move
+        if prevMove:
+            highlight = Color(244,246,128)
+            alpha = 180
+        
+            coord = self.tileToPosition(prevMove.from_square)
+            self.drawTile(coord, highlight, alpha)
+        
+            coord = self.tileToPosition(prevMove.to_square)
+            self.drawTile(coord, highlight, alpha)
+
+        # Highlights the square you click
+        if self.clicked:
+            highlight = Color(179, 31, 65)
+            alpha = 180
+
+            coord = self.tileToPosition(self.clicked)
+            self.drawTile(coord, highlight, alpha)
+
         for y in range(8):
             for x in range(8): 
-                if (x + y) % 2 == 0:
-                    tileColor = beige
-                else:
-                    tileColor = green
-                
-                pygame.draw.rect(self.screen, tileColor, rect=(x * self.tileSize, y * self.tileSize, self.tileSize, self.tileSize))
 
-                # Highlights the previous move
-                if prevMove and (y * 8 + x) in (prevMove.from_square, prevMove.to_square):
-                    surface = pygame.Surface((self.tileSize, self.tileSize))
-                    surface.set_alpha(180)
-                    surface.fill(Color(244,246,128))
-                    self.screen.blit(surface, (x * self.tileSize, y * self.tileSize))
-
-                # Highlights the square you click
-                if self.clicked == (y * 8 + x):
-                    surface = pygame.Surface((self.tileSize, self.tileSize))
-                    surface.set_alpha(180)
-                    surface.fill(Color(179, 31, 65))
-                    self.screen.blit(surface, (x * self.tileSize, y * self.tileSize))
                 tileNum = y * 8 + x
-
                 # Draws the pieces on the board
                 piece = self.board.piece_at(tileNum)
+                coord = self.tileToPosition(tileNum)
                 if piece != None:
-                    im = pygame.image.load("pieceImages/" + Images[piece.symbol()] + ".png")
-                    im = pygame.transform.scale(im, (self.tileSize, self.tileSize))
-                    self.screen.blit(im, (x * self.tileSize, y * self.tileSize))
+                    self.drawPiece(piece, coord)
 
-        pygame.display.flip()
+        if redraw:
+            pygame.display.flip()

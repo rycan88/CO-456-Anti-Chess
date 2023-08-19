@@ -14,13 +14,14 @@ def main():
             player1 = Human()
             player2 = BotLevel_3(chess.BLACK)
     else:
-        player1 = BotLevel_3(chess.WHITE)
+        player1 = Human()
         player2 = BotLevel_3(chess.BLACK)
+        #player1 = BotLevel_3(chess.WHITE)
+        #player2 = BotLevel_3(chess.BLACK)
 
     #player1 = Human()
     #player2 = Human()
-    player1 = BotLevel_3(chess.WHITE)
-    player2 = Human()
+
 
     board = GraphicBoard(player1, player2)
     board.run()
