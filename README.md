@@ -28,3 +28,5 @@ python3 main.py black
 ```
 
 where the bot will play on the side of the colour in the command line
+
+By default, the player will play as white if no argument is added.
