@@ -12,16 +12,8 @@ class GraphicBoard():
     def __init__(self, player1, player2):
 
         self.tileSize = 100
-        self.pieces = ["b_R", "b_N", "b_B", "b_Q", "b_K", "b_B", "b_N", "b_R",
-                      "b_P", "b_P", "b_P", "b_P", "b_P", "b_P", "b_P", "b_P",
-                       None,  None,  None,  None,  None,  None,  None,  None, 
-                       None,  None,  None,  None,  None,  None,  None,  None,
-                       None,  None,  None,  None,  None,  None,  None,  None,
-                       None,  None,  None,  None,  None,  None,  None,  None,
-                      "w_P", "w_P", "w_P", "w_P", "w_P", "w_P", "w_P", "w_P", 
-                      "w_R", "w_N", "w_B", "w_Q", "w_K", "w_B", "w_N", "w_R",]
         pygame.init()
-        self.screen = pygame.display.set_mode((8 * self.tileSize, 8 * self.tileSize))
+        self.screen = pygame.display.set_mode(((8 + 4) * self.tileSize, 8 * self.tileSize))
 
         self.player1 = player1
         self.player2 = player2
@@ -58,9 +50,9 @@ class GraphicBoard():
                             pygame.quit()
                             sys.exit()
                         if event.type == pygame.MOUSEBUTTONDOWN:
+                            if event.pos[0] >= 8 * self.tileSize or event.pos[1] >= 8 * self.tileSize:
+                                continue
                             tileNum = self.positionToTile(event.pos)
-                            print(tileNum)
-                            print(first, second)
                             if first == None:
                                 if self.board.color_at(tileNum) == self.board.turn:
                                     first = tileNum
@@ -69,10 +61,33 @@ class GraphicBoard():
                             else:
                                 second = tileNum
                                 move = chess.Move(first, second)
-                                print(move, self.board.is_legal(move))
+                                
                                 self.clicked = None
+                                # Checks if the move is legal
                                 if self.board.is_legal(move):
                                     break
+                                # Checks if the move is legal with a promotion
+                                move.promotion = 5
+                                if self.board.is_legal(move):
+                                    promotion_y_start = 4 * self.tileSize
+                                    Images = ["w_N", "w_B", "w_R", "w_Q"]
+                                    for i in range(len(Images)):
+                                        im = pygame.image.load("pieceImages/" + Images[i] + ".png")
+                                        im = pygame.transform.scale(im, (self.tileSize, self.tileSize))
+                                        self.screen.blit(im, ((8 + i) * self.tileSize, promotion_y_start))
+                                    pygame.display.flip()
+                                    promoted_piece = None
+                                    while promoted_piece == None:
+                                        for event in pygame.event.get():
+                                            if event.type == pygame.QUIT:
+                                                pygame.quit()
+                                                sys.exit()
+                                            if event.type == pygame.MOUSEBUTTONDOWN:
+                                                if event.pos[0] >= 8 * self.tileSize and promotion_y_start <= event.pos[1] < promotion_y_start + self.tileSize:
+                                                    promoted_piece = (event.pos[0] // self.tileSize) - 8 + 2
+                                    move.promotion = promoted_piece
+                                    break
+
                                 first = None
                                 second = None
                                 self.update()
@@ -117,7 +132,7 @@ class GraphicBoard():
         if len(self.board.move_stack) > 0:
             prevMove = self.board.peek()
         # fill the screen with a color to wipe away anything from last frame
-        self.screen.fill("white")
+        self.screen.fill(Color(38,37,34))
         for y in range(8):
             for x in range(8): 
                 if (x + y) % 2 == 0:
@@ -126,12 +141,15 @@ class GraphicBoard():
                     tileColor = green
                 
                 pygame.draw.rect(self.screen, tileColor, rect=(x * self.tileSize, y * self.tileSize, self.tileSize, self.tileSize))
+
+                # Highlights the previous move
                 if prevMove and (y * 8 + x) in (prevMove.from_square, prevMove.to_square):
                     surface = pygame.Surface((self.tileSize, self.tileSize))
                     surface.set_alpha(180)
                     surface.fill(Color(244,246,128))
                     self.screen.blit(surface, (x * self.tileSize, y * self.tileSize))
 
+                # Highlights the square you click
                 if self.clicked == (y * 8 + x):
                     surface = pygame.Surface((self.tileSize, self.tileSize))
                     surface.set_alpha(180)
@@ -139,10 +157,11 @@ class GraphicBoard():
                     self.screen.blit(surface, (x * self.tileSize, y * self.tileSize))
                 tileNum = y * 8 + x
 
+                # Draws the pieces on the board
                 piece = self.board.piece_at(tileNum)
                 if piece != None:
                     im = pygame.image.load("pieceImages/" + Images[piece.symbol()] + ".png")
                     im = pygame.transform.scale(im, (self.tileSize, self.tileSize))
                     self.screen.blit(im, (x * self.tileSize, y * self.tileSize))
-        # flip() the display to put your work on screen
+
         pygame.display.flip()
