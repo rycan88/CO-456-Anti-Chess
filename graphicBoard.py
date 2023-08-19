@@ -90,7 +90,6 @@ class GraphicBoard():
                             if event.pos[0] >= 8 * self.tileSize or event.pos[1] >= 8 * self.tileSize:
                                 continue
                             tileNum = self.positionToTile(event.pos)
-                            print(tileNum)
                             if first == None:
                                 if self.board.color_at(tileNum) == self.board.turn:
                                     first = tileNum
